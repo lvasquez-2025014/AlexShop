@@ -22,14 +22,14 @@ const slides: Slide[] = [
     features: [
       { icon: 'diamond', title: 'Precios -40%', subtitle: 'Valor Original' },
       { icon: 'bolt', title: 'Pases Elite', subtitle: 'Al mejor precio' },
-      { icon: 'users', title: '+5 mil', subtitle: 'Clientes Activos' },
+      { icon: 'users', title: '+15', subtitle: 'Clientes Activos' },
     ],
   },
   {
     tagline: 'Entrega inmediata',
     sub: 'Recibe tus diamantes en minutos',
     features: [
-      { icon: 'bolt', title: 'Entrega Rapida', subtitle: 'En menos de 5 min' },
+      { icon: 'bolt', title: 'Entrega Rapida', subtitle: 'En un plazo de 0 a 24 H' },
       { icon: 'shield', title: 'Compra Segura', subtitle: '100% garantizada' },
       { icon: 'support', title: 'Soporte 24/7', subtitle: 'Siempre disponibles' },
     ],
@@ -40,7 +40,7 @@ const slides: Slide[] = [
     features: [
       { icon: 'diamond', title: 'Precios -40%', subtitle: 'Del precio original' },
       { icon: 'shield', title: 'Metodos Seguros', subtitle: 'Pagos protegidos' },
-      { icon: 'users', title: '+5 mil', subtitle: 'Clientes satisfechos' },
+      { icon: 'users', title: '+15', subtitle: 'Clientes satisfechos' },
     ],
   },
 ]

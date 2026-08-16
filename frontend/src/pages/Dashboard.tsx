@@ -12,15 +12,16 @@ type Period = 'Dia' | 'Semana' | 'Mes' | 'Anio'
 
 const periods: Period[] = ['Dia', 'Semana', 'Mes', 'Anio']
 
-const currencies = [
-  { code: 'MXN', flag: 'fi fi-mx' },
-  { code: 'GTQ', flag: 'fi fi-gt' },
-  { code: 'USD', flag: 'fi fi-us' },
-]
-
-function money(n: number) {
-  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2 })
+const currencyConfig: Record<string, { flag: string; rate: number; symbol: string }> = {
+  MXN: { flag: 'fi fi-mx', rate: 18.5, symbol: 'MX$' },
+  GTQ: { flag: 'fi fi-gt', rate: 7.7, symbol: 'Q' },
+  USD: { flag: 'fi fi-us', rate: 1, symbol: '$' },
 }
+
+const currencies = Object.entries(currencyConfig).map(([code, c]) => ({
+  code,
+  flag: c.flag,
+}))
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -32,6 +33,15 @@ export default function Dashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [currency, setCurrency] = useState('MXN')
   const [currencyOpen, setCurrencyOpen] = useState(false)
+
+  const money = (n: number) => {
+    const { rate, symbol } = currencyConfig[currency]
+    const value = n * rate
+    if (currency === 'USD') {
+      return symbol + value.toLocaleString('en-US', { minimumFractionDigits: 2 })
+    }
+    return symbol + Math.round(value).toLocaleString('en-US')
+  }
 
   const showToast = (text: string) => {
     setToast(text)
@@ -71,7 +81,31 @@ export default function Dashboard() {
       <header className="topbar">
         <button className="logo" onClick={() => goTo('inicio')}>
           <span className="logo-mark" aria-hidden="true">
-            <span className="logo-diamond" />
+            <svg className="logo-diamond" viewBox="0 0 32 32">
+              <defs>
+                <linearGradient id="diamond-grad" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#b3ecff" />
+                  <stop offset="0.45" stopColor="#00d4ff" />
+                  <stop offset="1" stopColor="#006fae" />
+                </linearGradient>
+                <linearGradient id="diamond-shine" x1="10" y1="5" x2="24" y2="14" gradientUnits="userSpaceOnUse">
+                  <stop offset="0" stopColor="#ffffff" stopOpacity="0.95" />
+                  <stop offset="1" stopColor="#c9f4ff" stopOpacity="0.05" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M10 4h12l8 10-14 14L2 14l8-10Z"
+                fill="url(#diamond-grad)"
+              />
+              <path d="M11 10 16 4l5 6-5 4-5-6Z" fill="url(#diamond-shine)" />
+              <path
+                d="M2 14h28M16 4v24M10 4l1 6M22 4l-1 6M11 10l5 4 5-4M2 14l5 4M30 14l-5 4M7 18l9 10M25 18l-9 10"
+                stroke="rgba(255,255,255,0.5)"
+                strokeWidth="0.9"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </svg>
           </span>
           AlexShop<span className="logo-dot">.</span>
         </button>
@@ -151,10 +185,9 @@ export default function Dashboard() {
                 <div className="payment-box">
                   <div className="payment-title">METODOS DE PAGO</div>
                   <div className="payment-list">
-                    <span className="pay">NEQUI</span>
-                    <span className="pay">DAVIPLATA</span>
-                    <span className="pay">PAYPAL</span>
-                    <span className="pay">+40</span>
+                    <span className="pay">PayPal</span>
+                    <span className="pay">SpingByOxxo</span>
+                    <span className="pay">Binance</span>
                   </div>
                 </div>
               </div>
@@ -172,7 +205,11 @@ export default function Dashboard() {
                       onClick={() => selectPackage(pkg)}
                     >
                       {pkg.popular && <div className="badge">POPULAR</div>}
-                      <div className="diamond-art" />
+                      <img
+                        className="package-img"
+                        src={`/images/${pkg.diamonds}.png`}
+                        alt={`${pkg.diamonds} diamantes`}
+                      />
                       <div className="amount">{pkg.diamonds} ◆</div>
                       <div className="bonus">
                         {pkg.diamonds - pkg.bonus} + {pkg.bonus} bonus
@@ -245,7 +282,11 @@ export default function Dashboard() {
               <div className="big-products">
                 {packages.map((pkg) => (
                   <article className="big-product" key={pkg.id}>
-                    <div className="diamond-art" />
+                    <img
+                      className="package-img big"
+                      src={`/images/${pkg.diamonds}.png`}
+                      alt={`${pkg.diamonds} diamantes`}
+                    />
                     <div>
                       <h3>{pkg.diamonds} ◆</h3>
                       <p>
@@ -281,7 +322,7 @@ export default function Dashboard() {
                 </div>
                 <div className="total">
                   <span>Total</span>
-                  <strong>{selected ? money(selected.price) : '$0.00'}</strong>
+                  <strong>{selected ? money(selected.price) : money(0)}</strong>
                 </div>
                 <button className="buy wide" onClick={confirmPurchase}>
                   Continuar
