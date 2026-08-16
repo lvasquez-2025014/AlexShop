@@ -13,7 +13,12 @@ const allowedOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5173")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+  })
+);
 app.use(
   cors({
     origin: (origin, callback) => {
