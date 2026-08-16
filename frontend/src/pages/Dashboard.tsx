@@ -42,7 +42,7 @@ const currencies = Object.entries(currencyConfig).map(([code, c]) => ({
 }))
 
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user, logout, updateProfile } = useAuth()
   const isGuest = user?.email === GUEST_EMAIL
   const pageRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState<Page>('inicio')
@@ -53,6 +53,10 @@ export default function Dashboard() {
   const [currency, setCurrency] = useState('MXN')
   const [currencyOpen, setCurrencyOpen] = useState(false)
   const [authModal, setAuthModal] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [ffName, setFfName] = useState(user?.ffName ?? '')
+  const [ffId, setFfId] = useState(user?.ffId ?? '')
+  const [profileSaving, setProfileSaving] = useState(false)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -212,6 +216,15 @@ export default function Dashboard() {
     'label' in item ? item.label : `${item.diamonds} ◆`
 
   useEffect(() => {
+    const onClick = () => {
+      setProfileOpen(false)
+      setCurrencyOpen(false)
+    }
+    window.addEventListener('click', onClick)
+    return () => window.removeEventListener('click', onClick)
+  }, [])
+
+  useEffect(() => {
     const raw = sessionStorage.getItem(PENDING_KEY)
     if (raw && !isGuest) {
       sessionStorage.removeItem(PENDING_KEY)
@@ -354,21 +367,79 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-          <div className="user-chip">
-            {user?.picture ? (
-              <img className="user-avatar" src={user.picture} alt={user.name} referrerPolicy="no-referrer" />
-            ) : (
-              <span className="user-avatar-placeholder">{user?.name?.charAt(0) ?? '?'}</span>
+          <div className="profile-wrap">
+            <button
+              className="user-chip"
+              onClick={(e) => {
+                e.stopPropagation()
+                setProfileOpen(!profileOpen)
+                setFfName(user?.ffName ?? '')
+                setFfId(user?.ffId ?? '')
+              }}
+            >
+              {user?.picture ? (
+                <img className="user-avatar" src={user.picture} alt={user.name} referrerPolicy="no-referrer" />
+              ) : (
+                <span className="user-avatar-placeholder">{user?.name?.charAt(0) ?? '?'}</span>
+              )}
+              <span className="user-name">{user?.name}</span>
+              <span className="user-caret">⌄</span>
+            </button>
+
+            {profileOpen && (
+              <div className="profile-dropdown" onClick={(e) => e.stopPropagation()}>
+                <div className="profile-head">
+                  <img className="profile-photo" src={user?.picture} alt={user?.name} referrerPolicy="no-referrer" />
+                  <div>
+                    <strong>{user?.name}</strong>
+                    <span>{user?.email}</span>
+                  </div>
+                </div>
+
+                <div className="profile-section">
+                  <span className="profile-label">CUENTA FREE FIRE</span>
+                  <label className="profile-field">
+                    <span>Nombre de la cuenta</span>
+                    <input
+                      value={ffName}
+                      onChange={(e) => setFfName(e.target.value)}
+                      placeholder="Ej: AlexElPro"
+                    />
+                  </label>
+                  <label className="profile-field">
+                    <span>ID de la cuenta</span>
+                    <input
+                      value={ffId}
+                      onChange={(e) => setFfId(e.target.value)}
+                      placeholder="Ej: 123456789"
+                    />
+                  </label>
+                  <button
+                    className="profile-save"
+                    disabled={profileSaving}
+                    onClick={async () => {
+                      setProfileSaving(true)
+                      try {
+                        await updateProfile({ ffName, ffId })
+                        showToast('Perfil guardado')
+                        setProfileOpen(false)
+                      } catch (err) {
+                        showToast(err instanceof Error ? err.message : 'Error al guardar')
+                      } finally {
+                        setProfileSaving(false)
+                      }
+                    }}
+                  >
+                    {profileSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+
+                <button className="profile-logout" onClick={logout}>
+                  Cerrar sesion
+                </button>
+              </div>
             )}
-            <span className="user-name">{user?.name}</span>
           </div>
-          <button className="logout-btn" onClick={logout}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
-          </button>
         </div>
 
         <button className="mobile-menu" onClick={() => setMenuOpen(!menuOpen)}>

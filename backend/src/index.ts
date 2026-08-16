@@ -4,6 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./auth/routes.js";
+import userRoutes from "./user/routes.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -47,6 +48,7 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/auth", authLimiter, authRoutes);
+app.use("/api/user", userRoutes);
 
 app.use(
   (

@@ -12,6 +12,8 @@ export interface User {
   name: string
   picture: string
   role: 'admin' | 'client'
+  ffName: string
+  ffId: string
 }
 
 interface AuthContextValue {
@@ -20,6 +22,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>
   loginWithGoogle: (credential: string) => Promise<void>
   loginAsGuest: () => void
+  updateProfile: (data: { ffName?: string; ffId?: string }) => Promise<void>
   logout: () => void
 }
 
@@ -79,6 +82,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     persist(data.user, data.token)
   }, [persist])
 
+  const updateProfile = useCallback(
+    async (data: { ffName?: string; ffId?: string }) => {
+      if (!token) throw new Error('No autorizado')
+
+      const res = await fetch(`${API_URL}/api/user/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error ?? 'Error al guardar perfil')
+      }
+
+      const result = await res.json()
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(result.user))
+      setUser(result.user)
+    },
+    [token]
+  )
+
   const loginAsGuest = useCallback(() => {
     const guestUser: User = {
       id: 'guest',
@@ -86,6 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: 'Invitado',
       picture: '',
       role: 'client',
+      ffName: '',
+      ffId: '',
     }
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(guestUser))
     sessionStorage.removeItem(TOKEN_KEY)
@@ -101,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, token, login, loginWithGoogle, loginAsGuest, logout }}>
+    <AuthContext.Provider value={{ user, token, login, loginWithGoogle, loginAsGuest, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   )

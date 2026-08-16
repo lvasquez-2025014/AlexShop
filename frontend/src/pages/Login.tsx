@@ -180,7 +180,7 @@ export default function Login() {
       if (!googleInitialized) {
         googleInitialized = true
         window.google.accounts.id.initialize({
-          client_id: '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com',
+          client_id: GOOGLE_CLIENT_ID,
           callback: (response) => {
             handleGoogle(response.credential)
           },
