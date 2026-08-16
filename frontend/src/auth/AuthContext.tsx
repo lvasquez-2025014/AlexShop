@@ -2,22 +2,30 @@ import {
   createContext,
   useContext,
   useState,
+  useCallback,
   type ReactNode,
 } from 'react'
 
 export interface User {
+  id: string
   email: string
   name: string
+  picture: string
+  role: 'admin' | 'client'
 }
 
 interface AuthContextValue {
   user: User | null
+  token: string | null
   login: (email: string, password: string) => Promise<void>
+  loginWithGoogle: (credential: string) => Promise<void>
   loginAsGuest: () => void
   logout: () => void
 }
 
 const SESSION_KEY = 'alexshop-user'
+const TOKEN_KEY = 'alexshop-token'
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 
 export const GUEST_EMAIL = 'invitado@alexshop.com'
 
@@ -28,33 +36,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = sessionStorage.getItem(SESSION_KEY)
     return stored ? (JSON.parse(stored) as User) : null
   })
+  const [token, setToken] = useState<string | null>(() =>
+    sessionStorage.getItem(TOKEN_KEY)
+  )
 
-  const login = async (email: string, password: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 700))
-    if (!email.includes('@') || password.length < 6) {
-      throw new Error('Email o contrasena invalidos')
-    }
-    const nextUser: User = {
-      email,
-      name: email.split('@')[0] ?? email,
-    }
+  const persist = useCallback((nextUser: User, nextToken: string) => {
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(nextUser))
+    sessionStorage.setItem(TOKEN_KEY, nextToken)
     setUser(nextUser)
-  }
+    setToken(nextToken)
+  }, [])
 
-  const loginAsGuest = () => {
-    const guestUser: User = { email: GUEST_EMAIL, name: 'Invitado' }
+  const login = useCallback(async (email: string, password: string) => {
+    const res = await fetch(`${API_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.error ?? 'Error al iniciar sesion')
+    }
+
+    const data = await res.json()
+    persist(data.user, data.token)
+  }, [persist])
+
+  const loginWithGoogle = useCallback(async (credential: string) => {
+    const res = await fetch(`${API_URL}/api/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential }),
+    })
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      throw new Error(data.error ?? 'Error al autenticar con Google')
+    }
+
+    const data = await res.json()
+    persist(data.user, data.token)
+  }, [persist])
+
+  const loginAsGuest = useCallback(() => {
+    const guestUser: User = {
+      id: 'guest',
+      email: GUEST_EMAIL,
+      name: 'Invitado',
+      picture: '',
+      role: 'client',
+    }
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(guestUser))
+    sessionStorage.removeItem(TOKEN_KEY)
     setUser(guestUser)
-  }
+    setToken(null)
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     sessionStorage.removeItem(SESSION_KEY)
+    sessionStorage.removeItem(TOKEN_KEY)
     setUser(null)
-  }
+    setToken(null)
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, login, loginAsGuest, logout }}>
+    <AuthContext.Provider value={{ user, token, login, loginWithGoogle, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   )
