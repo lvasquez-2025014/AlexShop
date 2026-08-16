@@ -30,3 +30,24 @@ export const featuredPass: ShopPackage = {
   price: 30,
   category: 'pases',
 }
+
+export interface MaxeoProduct {
+  id: string
+  label: string
+  price: number
+}
+
+export const maxeoProducts: MaxeoProduct[] = [
+  { id: 'frag', label: 'Fragmentos', price: 1.02 },
+  { id: 'cajas', label: 'Cajas', price: 5 },
+  { id: 'cajas99', label: '99 Cajas', price: 460 },
+]
+
+export const maxeoLevels: MaxeoProduct[] = [
+  { id: 'm12', label: 'Maxeo 1/2 al 7', price: 1000 },
+  { id: 'm37', label: 'Maxeo 3 al 7', price: 960 },
+  { id: 'm47', label: 'Maxeo 4 al 7', price: 920 },
+  { id: 'm57', label: 'Maxeo 5 al 7', price: 700 },
+  { id: 'm67', label: 'Maxeo 6 al 7', price: 430 },
+  { id: 'm78', label: 'Maxeo 7 al 8', price: 530 },
+]

@@ -1,17 +1,32 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GUEST_EMAIL, useAuth } from '../auth/AuthContext'
+import gsap from 'gsap'
 import {
   packages,
   passes,
   featuredPass,
+  maxeoProducts,
+  maxeoLevels,
   type ShopPackage,
+  type MaxeoProduct,
 } from '../data/mockData'
+
+type StoreItem = ShopPackage | MaxeoProduct
+
+function Letters({ text, className = '' }: { text: string; className?: string }) {
+  return (
+    <span className={className}>
+      {text.split('').map((letter, index) => (
+        <span className="hl" key={`${letter}-${index}`}>
+          {letter}
+        </span>
+      ))}
+    </span>
+  )
+}
 import './Dashboard.css'
 
-type Page = 'inicio' | 'diamantes' | 'pases' | 'ranking'
-type Period = 'Dia' | 'Semana' | 'Mes' | 'Anio'
-
-const periods: Period[] = ['Dia', 'Semana', 'Mes', 'Anio']
+type Page = 'inicio' | 'diamantes' | 'pases'
 
 const currencyConfig: Record<string, { flag: string; rate: number; symbol: string }> = {
   MXN: { flag: 'fi fi-mx', rate: 1, symbol: 'MX$' },
@@ -29,26 +44,181 @@ const currencies = Object.entries(currencyConfig).map(([code, c]) => ({
 export default function Dashboard() {
   const { user, logout } = useAuth()
   const isGuest = user?.email === GUEST_EMAIL
+  const pageRef = useRef<HTMLDivElement>(null)
   const [page, setPage] = useState<Page>('inicio')
   const [menuOpen, setMenuOpen] = useState(false)
-  const [selected, setSelected] = useState<ShopPackage | null>(null)
+  const [selected, setSelected] = useState<StoreItem | null>(null)
   const [playerId, setPlayerId] = useState('')
-  const [period, setPeriod] = useState<Period>('Dia')
   const [toast, setToast] = useState<string | null>(null)
   const [currency, setCurrency] = useState('MXN')
   const [currencyOpen, setCurrencyOpen] = useState(false)
   const [authModal, setAuthModal] = useState(false)
 
   useEffect(() => {
-    const pendingId = sessionStorage.getItem(PENDING_KEY)
-    if (pendingId && !isGuest) {
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+
+      tl.from('.page.active .eyebrow', {
+        letterSpacing: '16px',
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        clearProps: 'all',
+      })
+        .from('.page.active h1', {
+          y: 34,
+          opacity: 0,
+          duration: 0.75,
+          clearProps: 'all',
+        }, '-=0.35')
+        .from('.page.active h2', {
+          y: 24,
+          rotation: -1.5,
+          opacity: 0,
+          duration: 0.55,
+          stagger: 0.1,
+          clearProps: 'all',
+        }, '-=0.35')
+        .from('.page.active .intro-copy, .page.active .sub-hero p, .page.active .pass-info p', {
+          y: 20,
+          opacity: 0,
+          filter: 'blur(6px)',
+          duration: 0.6,
+          stagger: 0.08,
+          clearProps: 'all',
+        }, '-=0.35')
+        .from('.page.active .payment-box', {
+          scale: 0.92,
+          y: 14,
+          opacity: 0,
+          duration: 0.55,
+          clearProps: 'all',
+        }, '-=0.3')
+        .from('.page.active .section-card', {
+          y: 36,
+          opacity: 0,
+          duration: 0.7,
+          stagger: 0.12,
+          clearProps: 'all',
+        }, '-=0.45')
+        .from('.page.active .maxeo-row', {
+          scale: 0.92,
+          opacity: 0,
+          duration: 0.4,
+          stagger: 0.06,
+          clearProps: 'all',
+        }, '-=0.5')
+        .from('.page.active .maxeo-tag', {
+          scale: 0.8,
+          opacity: 0,
+          duration: 0.45,
+          stagger: 0.08,
+          clearProps: 'all',
+        }, '-=0.2')
+        .from('.page.active .fame-head', {
+          scale: 0.92,
+          opacity: 0,
+          duration: 0.5,
+          clearProps: 'all',
+        }, '-=0.4')
+        .add(() => {
+          const steps = gsap.utils.toArray<HTMLElement>('.page.active .step')
+          steps.forEach((el, i) => {
+            tl.from(el, {
+              x: i % 2 === 0 ? -28 : 28,
+              opacity: 0,
+              duration: 0.45,
+              clearProps: 'all',
+            }, '<')
+          })
+
+          const letters = gsap.utils.toArray<HTMLElement>('.page.active .hl')
+          const wave = gsap.timeline({ repeat: -1, repeatDelay: 3.5, delay: 0.4 })
+          letters.forEach((letter) => {
+            wave
+              .to(letter, { y: -13, duration: 0.18, ease: 'sine.inOut' })
+              .to(letter, { y: 0, duration: 0.18, ease: 'sine.inOut' })
+          })
+
+          const nums = gsap.utils.toArray<HTMLElement>(
+            '.page.active .amount, .page.active .price, .page.active .pass-price, .page.active .product-price, .page.active .total strong, .page.active .maxeo-row strong'
+          )
+          nums.forEach((el) => {
+            const text = el.textContent ?? ''
+            const match = text.match(/[\d,]+(?:\.\d+)?/)
+            if (!match || match.index === undefined) return
+            const target = parseFloat(match[0].replace(/,/g, ''))
+            const prefix = text.slice(0, match.index)
+            const suffix = text.slice(match.index + match[0].length)
+            const state = { v: 0 }
+            gsap.to(state, {
+              v: target,
+              duration: 1,
+              ease: 'power2.out',
+              onUpdate: () => {
+                const decimals = Number.isInteger(target) ? 0 : 2
+                el.textContent =
+                  prefix +
+                  state.v.toLocaleString('en-US', {
+                    minimumFractionDigits: decimals,
+                    maximumFractionDigits: 2,
+                  }) +
+                  suffix
+              },
+            })
+          })
+
+          gsap.to('.page.active .eyebrow', {
+            letterSpacing: '4.8px',
+            opacity: 0.85,
+            duration: 1.4,
+            ease: 'sine.inOut',
+            yoyo: true,
+            repeat: -1,
+            delay: 1.8,
+          })
+
+          gsap.fromTo('.page.active .fame-head', {
+            textShadow: '0 0 8px rgba(0, 212, 255, 0.12)',
+          }, {
+            textShadow: '0 0 24px rgba(0, 212, 255, 0.5)',
+            duration: 1.5,
+            yoyo: true,
+            repeat: -1,
+            ease: 'sine.inOut',
+            delay: 1.4,
+          })
+
+          gsap.to('.page.active .package-img, .page.active .pass-img, .page.active .maxeo-img', {
+            y: -7,
+            duration: 1.7,
+            yoyo: true,
+            repeat: -1,
+            ease: 'sine.inOut',
+            stagger: 0.25,
+            delay: 1.3,
+          })
+        })
+    }, pageRef)
+
+    return () => ctx.revert()
+  }, [page])
+
+  const itemLabel = (item: StoreItem) =>
+    'label' in item ? item.label : `${item.diamonds} ◆`
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(PENDING_KEY)
+    if (raw && !isGuest) {
       sessionStorage.removeItem(PENDING_KEY)
-      const pkg = [...packages, ...passes].find((p) => p.id === pendingId)
-      if (pkg) {
-        setSelected(pkg)
+      try {
+        const item = JSON.parse(raw) as StoreItem
+        setSelected(item)
         setPage('diamantes')
-        setToast(`Bienvenido! Tu compra de ${pkg.diamonds} ◆ esta lista`)
+        setToast(`Bienvenido! Tu compra de ${itemLabel(item)} esta lista`)
         window.setTimeout(() => setToast(null), 2600)
+      } catch {
+        // valor antiguo o corrupto: ignorar
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,10 +227,11 @@ export default function Dashboard() {
   const money = (n: number) => {
     const { rate, symbol } = currencyConfig[currency]
     const value = n * rate
-    if (currency === 'USD') {
-      return symbol + value.toLocaleString('en-US', { minimumFractionDigits: 2 })
-    }
-    return symbol + Math.round(value).toLocaleString('en-US')
+    const decimals = Number.isInteger(value) ? (currency === 'USD' ? 2 : 0) : 2
+    return symbol + value.toLocaleString('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    })
   }
 
   const showToast = (text: string) => {
@@ -68,24 +239,20 @@ export default function Dashboard() {
     window.setTimeout(() => setToast(null), 2400)
   }
 
-  const selectPackage = (pkg: ShopPackage) => {
-    setSelected(pkg)
-    if (page !== 'diamantes') {
-      setPage('diamantes')
-    }
-  }
-
-  const requireAccount = (pkg: ShopPackage) => {
-    sessionStorage.setItem(PENDING_KEY, pkg.id)
+  const requireAccount = (item: StoreItem) => {
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify(item))
     setAuthModal(true)
   }
 
-  const buyPackage = (pkg: ShopPackage) => {
+  const buyItem = (item: StoreItem) => {
     if (isGuest) {
-      requireAccount(pkg)
+      requireAccount(item)
       return
     }
-    selectPackage(pkg)
+    setSelected(item)
+    if (page !== 'diamantes') {
+      setPage('diamantes')
+    }
   }
 
   const confirmPurchase = () => {
@@ -108,11 +275,10 @@ export default function Dashboard() {
 
   const navItems: { id: Page; label: string }[] = [
     { id: 'inicio', label: 'Inicio' },
-    { id: 'ranking', label: 'Ranking' },
   ]
 
   return (
-    <div className="dash">
+    <div className="dash" ref={pageRef}>
       <header className="topbar">
         <button className="logo" onClick={() => goTo('inicio')}>
           <span className="logo-mark" aria-hidden="true">
@@ -202,11 +368,11 @@ export default function Dashboard() {
               <div className="intro">
                 <div className="eyebrow">RECARGAS INSTANTANEAS</div>
                 <h1>
-                  Free
+                  <Letters text="Free" />
                   <br />
-                  Fire
+                  <Letters text="Fire" />
                   <br />
-                  <span>Recarga</span>
+                  <Letters text="Recarga" className="grad" />
                 </h1>
                 <p className="intro-copy">
                   Elige tu paquete, paga con tu metodo favorito y recibe tus
@@ -237,7 +403,7 @@ export default function Dashboard() {
                     <article
                       key={pkg.id}
                       className={`package ${pkg.popular ? 'popular' : ''}`}
-                      onClick={() => buyPackage(pkg)}
+                      onClick={() => buyItem(pkg)}
                     >
                       {pkg.popular && <div className="badge">POPULAR</div>}
                       <img
@@ -255,51 +421,63 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <aside className="section-card ranking">
-                <div className="rank-title">
-                  <svg className="crown-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="m2 8 3.5 3L12 5l6.5 6L22 8l-1.5 9h-17L2 8Z" />
-                    <path d="M5.5 21h13" />
-                  </svg>
-                  Top compradores
+              <section className="section-card pass-banner">
+                <img
+                  className="pass-img"
+                  src="/images/paseElite.png"
+                  alt="Pase Elite"
+                />
+                <div className="pass-info">
+                  <div className="eyebrow">OFERTA ESPECIAL</div>
+                  <h2>Pase Elite</h2>
+                  <p>
+                    Pase de temporada con entrega inmediata y beneficios exclusivos.
+                  </p>
+                  <strong className="pass-price">{money(featuredPass.price)}</strong>
                 </div>
-                <div className="tabs">
-                  {periods.map((p) => (
+                <button className="buy" onClick={() => buyItem(featuredPass)}>
+                  Comprar
+                </button>
+              </section>
+
+              <section className="section-card maxeo-card">
+                <div className="maxeo-head">
+                  <img
+                    className="maxeo-img"
+                    src="/images/evos.png"
+                    alt="Armas evolutivas"
+                  />
+                  <div>
+                    <div className="eyebrow">ENTREGA APROXIMADA (24-30H)</div>
+                    <h2>Maxeos de armas evolutivas</h2>
+                  </div>
+                </div>
+                <div className="maxeo-grid">
+                  {maxeoLevels.map((level) => (
                     <button
-                      key={p}
-                      className={period === p ? 'active' : ''}
-                      onClick={() => setPeriod(p)}
+                      key={level.id}
+                      className="maxeo-row"
+                      onClick={() => buyItem(level)}
                     >
-                      {p}
+                      <span>{level.label.replace(/^Maxeo /, '')}</span>
+                      <strong>{money(level.price)}</strong>
                     </button>
                   ))}
                 </div>
-                <div className="empty-state">
-                  <span className="empty-icon">◆</span>
-                  <strong>Aun no hay compradores</strong>
-                  <span>El ranking se llenara con datos reales de la base de datos.</span>
+                <div className="maxeo-extra">
+                  {maxeoProducts.map((item) => (
+                    <button
+                      key={item.id}
+                      className={`maxeo-tag ${item.id === 'cajas99' ? 'highlight' : ''}`}
+                      onClick={() => buyItem(item)}
+                    >
+                      {item.label.toUpperCase()} {money(item.price)} {item.id === 'frag' || item.id === 'cajas' ? 'c/u' : '—'}
+                      ☠️
+                    </button>
+                  ))}
                 </div>
-              </aside>
+              </section>
             </div>
-
-            <section className="section-card pass-banner">
-              <img
-                className="pass-img"
-                src="/images/paseElite.png"
-                alt="Pase Elite"
-              />
-              <div className="pass-info">
-                <div className="eyebrow">OFERTA ESPECIAL</div>
-                <h2>Pase Elite</h2>
-                <p>
-                  Pase de temporada con entrega inmediata y beneficios exclusivos.
-                </p>
-                <strong className="pass-price">{money(featuredPass.price)}</strong>
-              </div>
-              <button className="buy" onClick={() => buyPackage(featuredPass)}>
-                Comprar
-              </button>
-            </section>
 
             <section className="fame">
               <div className="fame-head">
@@ -324,7 +502,7 @@ export default function Dashboard() {
               <div>
                 <div className="eyebrow">FREE FIRE · STORE</div>
                 <h1>
-                  Compra tus <span>diamantes</span>
+                  <Letters text="Compra tus" /> <Letters text="diamantes" className="grad" />
                 </h1>
               </div>
               <p>
@@ -347,7 +525,7 @@ export default function Dashboard() {
                         {pkg.diamonds - pkg.bonus} + {pkg.bonus} bonus
                       </p>
                       <strong className="product-price">{money(pkg.price)}</strong>
-                      <button className="buy" onClick={() => buyPackage(pkg)}>
+                      <button className="buy" onClick={() => buyItem(pkg)}>
                         Comprar
                       </button>
                     </div>
@@ -357,6 +535,9 @@ export default function Dashboard() {
 
               <aside className="checkout-panel">
                 <h3>Datos de entrega</h3>
+                <div className={`checkout-item ${selected ? '' : 'empty'}`}>
+                  {selected ? itemLabel(selected) : 'Ningun producto seleccionado'}
+                </div>
                 <div className="field">
                   <label>ID del jugador</label>
                   <input
@@ -392,7 +573,7 @@ export default function Dashboard() {
               <div>
                 <div className="eyebrow">PASES ELITE</div>
                 <h1>
-                  Pases al <span>mejor precio</span>
+                  <Letters text="Pases al" /> <Letters text="mejor precio" className="grad" />
                 </h1>
               </div>
               <p>
@@ -407,47 +588,12 @@ export default function Dashboard() {
                     <h3>{pkg.diamonds} ◆</h3>
                     <p>Pase Elite · entrega inmediata</p>
                     <strong className="product-price">{money(pkg.price)}</strong>
-                    <button className="buy" onClick={() => buyPackage(pkg)}>
+                    <button className="buy" onClick={() => buyItem(pkg)}>
                       Comprar
                     </button>
                   </div>
                 </article>
               ))}
-            </div>
-          </section>
-        )}
-
-        {page === 'ranking' && (
-          <section className="page active">
-            <div className="sub-hero">
-              <div>
-                <div className="eyebrow">LEADERBOARD</div>
-                <h1>
-                  Top <span>compradores</span>
-                </h1>
-              </div>
-              <p>
-                Ranking dinamico por periodo. Los datos de esta demo se generan
-                desde datos de ejemplo.
-              </p>
-            </div>
-            <div className="section-card packages">
-              <div className="tabs full-tabs">
-                {periods.map((p) => (
-                  <button
-                    key={p}
-                    className={period === p ? 'active' : ''}
-                    onClick={() => setPeriod(p)}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <div className="empty-state">
-                <span className="empty-icon">◆</span>
-                <strong>El ranking esta vacio</strong>
-                <span>Cuando existan compras en la base de datos, los jugadores apareceran aqui.</span>
-              </div>
             </div>
           </section>
         )}
@@ -457,6 +603,12 @@ export default function Dashboard() {
         <span>© 2026 AlexShop · DEMO UI</span>
         <span>PRIVACIDAD · TERMINOS · SOPORTE</span>
       </footer>
+
+      {page !== 'inicio' && (
+        <button className="back-btn" onClick={() => goTo('inicio')} aria-label="Volver">
+          ←
+        </button>
+      )}
 
       {toast && <div className="toast show">{toast}</div>}
 

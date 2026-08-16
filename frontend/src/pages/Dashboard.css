@@ -309,7 +309,7 @@ button {
 /* --- Hero --- */
 .hero-grid {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr) 292px;
+  grid-template-columns: 300px 1fr;
   gap: 22px;
   align-items: start;
 }
@@ -334,12 +334,25 @@ button {
   text-transform: uppercase;
 }
 
-.intro h1 span {
-  display: block;
-  background: linear-gradient(135deg, #7dd3fc, var(--dash-cyan) 50%, var(--dash-blue));
+.intro h1 .hl,
+.sub-hero h1 .hl {
+  display: inline-block;
+}
+
+.intro h1 .grad,
+.sub-hero h1 .grad {
+  display: inline-block;
+}
+
+.intro h1 .grad .hl,
+.sub-hero h1 .grad .hl {
+  background: linear-gradient(180deg, #7dd3fc, var(--dash-cyan) 50%, var(--dash-blue));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+.intro h1 .grad {
   filter: drop-shadow(0 0 22px rgba(0, 212, 255, 0.25));
 }
 
@@ -587,55 +600,12 @@ button {
   text-shadow: 0 0 18px rgba(0, 212, 255, 0.35);
 }
 
-/* --- Ranking --- */
-.ranking {
-  padding: 20px;
-}
-
-.rank-title {
-  font-weight: 800;
-  letter-spacing: 2px;
-  color: #7ec9ff;
-  font-size: 12px;
-  text-transform: uppercase;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
+/* --- Empty states --- */
 .crown-icon {
   width: 16px;
   height: 16px;
   color: var(--dash-gold);
   filter: drop-shadow(0 0 8px rgba(231, 180, 58, 0.5));
-}
-
-.tabs {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 5px;
-  margin: 14px 0;
-  padding: 4px;
-  background: rgba(5, 10, 20, 0.8);
-  border: 1px solid var(--dash-line-soft);
-  border-radius: 12px;
-}
-
-.tabs button {
-  border: none;
-  background: transparent;
-  color: #7186a8;
-  padding: 8px 4px;
-  font-size: 9px;
-  font-weight: 800;
-  border-radius: 9px;
-  transition: 0.2s;
-}
-
-.tabs button.active {
-  color: #fff;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.22), rgba(59, 130, 246, 0.16));
-  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, 0.3);
 }
 
 .empty-state {
@@ -672,11 +642,11 @@ button {
 
 /* --- Pass banner --- */
 .pass-banner {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 32px;
   padding: 26px 34px;
-  margin-top: 42px;
   background:
     radial-gradient(circle at 16% 50%, rgba(0, 212, 255, 0.16), transparent 45%),
     linear-gradient(160deg, rgba(10, 24, 44, 0.85), rgba(3, 6, 14, 0.92));
@@ -724,6 +694,134 @@ button {
 
   .pass-img {
     width: 96px;
+  }
+}
+
+/* --- Maxeo card --- */
+.maxeo-card {
+  grid-column: 1 / -1;
+  padding: 24px 30px;
+}
+
+.maxeo-head {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.maxeo-img {
+  width: 190px;
+  height: auto;
+  flex-shrink: 0;
+  border-radius: 16px;
+  filter: drop-shadow(0 10px 28px rgba(0, 212, 255, 0.32));
+}
+
+.maxeo-head h2 {
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.maxeo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.maxeo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(5, 10, 20, 0.8);
+  border: 1px solid var(--dash-line-soft);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dash-text);
+  transition: 0.2s;
+  text-align: left;
+}
+
+.maxeo-row:hover {
+  border-color: rgba(0, 212, 255, 0.55);
+  background: rgba(0, 212, 255, 0.07);
+  transform: translateY(-2px);
+}
+
+.maxeo-row strong {
+  color: var(--dash-cyan);
+  font-size: 14px;
+}
+
+.maxeo-extra {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.maxeo-tag {
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--dash-line);
+  background: rgba(0, 212, 255, 0.05);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #c9d8f2;
+  transition: 0.2s;
+}
+
+.maxeo-tag:hover {
+  border-color: rgba(0, 212, 255, 0.55);
+  background: rgba(0, 212, 255, 0.12);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.maxeo-tag.highlight {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(59, 130, 246, 0.12));
+  color: var(--dash-cyan);
+  border-color: rgba(0, 212, 255, 0.45);
+  box-shadow: 0 0 18px rgba(0, 212, 255, 0.12);
+}
+
+.maxeo-tag.highlight:hover {
+  box-shadow: 0 0 26px rgba(0, 212, 255, 0.25);
+}
+
+.checkout-item {
+  border: 1px solid var(--dash-line-soft);
+  background: rgba(0, 212, 255, 0.05);
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--dash-cyan);
+  margin-bottom: 14px;
+}
+
+.checkout-item.empty {
+  color: #7186a8;
+  font-weight: 600;
+}
+
+@media (max-width: 800px) {
+  .maxeo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .maxeo-card {
+    padding: 16px;
+  }
+
+  .maxeo-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -786,8 +884,8 @@ button {
   letter-spacing: -2px;
 }
 
-.sub-hero h1 span {
-  background: linear-gradient(135deg, #7dd3fc, var(--dash-cyan) 55%, var(--dash-blue));
+.sub-hero h1 .grad .hl {
+  background: linear-gradient(180deg, #7dd3fc, var(--dash-cyan) 55%, var(--dash-blue));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1069,6 +1167,38 @@ button {
   text-shadow: 0 0 16px rgba(0, 212, 255, 0.3);
 }
 
+/* --- Back button (mobile) --- */
+.back-btn {
+  display: none;
+  position: fixed;
+  left: 16px;
+  bottom: 24px;
+  z-index: 200;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid var(--dash-line);
+  background: linear-gradient(135deg, rgba(10, 24, 44, 0.96), rgba(3, 6, 14, 0.96));
+  color: var(--dash-cyan);
+  font-size: 21px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 18px rgba(0, 212, 255, 0.15);
+  display: grid;
+  place-items: center;
+  transition: 0.2s;
+}
+
+.back-btn:hover {
+  transform: scale(1.08);
+  border-color: rgba(0, 212, 255, 0.6);
+}
+
+@media (min-width: 801px) {
+  .back-btn {
+    display: none !important;
+  }
+}
+
 /* --- Toast --- */
 .toast {
   position: fixed;
@@ -1109,18 +1239,6 @@ button {
 @media (max-width: 1150px) {
   .hero-grid {
     grid-template-columns: 250px 1fr;
-  }
-
-  .ranking {
-    grid-column: 1 / -1;
-  }
-
-  .rank-list {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .rank-more {
-    grid-column: 1 / -1;
   }
 }
 
@@ -1221,10 +1339,6 @@ button {
   }
 
   .package-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .rank-list {
     grid-template-columns: 1fr;
   }
 
