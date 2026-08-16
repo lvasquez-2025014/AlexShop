@@ -13,6 +13,7 @@ export interface User {
 interface AuthContextValue {
   user: User | null
   login: (email: string, password: string) => Promise<void>
+  loginAsGuest: () => void
   logout: () => void
 }
 
@@ -39,13 +40,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser)
   }
 
+  const loginAsGuest = () => {
+    const guestUser: User = { email: 'invitado@alexshop.com', name: 'Invitado' }
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(guestUser))
+    setUser(guestUser)
+  }
+
   const logout = () => {
     sessionStorage.removeItem(SESSION_KEY)
     setUser(null)
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, loginAsGuest, logout }}>
       {children}
     </AuthContext.Provider>
   )
