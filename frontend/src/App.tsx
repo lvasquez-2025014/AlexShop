@@ -1,18 +1,17 @@
-import './App.css'
+import { AuthProvider, useAuth } from './auth/AuthContext'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+
+function AppRoutes() {
+  const { user } = useAuth()
+  return user ? <Dashboard /> : <Login />
+}
 
 function App() {
   return (
-    <main className="not-found">
-      <div className="card">
-        <span className="label">Error 404</span>
-        <h1>Pagina no encontrada</h1>
-        <p>
-          La pagina que buscas no existe o fue movida.
-          Verifica la URL o vuelve al inicio.
-        </p>
-        <a href="/" className="btn">Volver al inicio</a>
-      </div>
-    </main>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   )
 }
 
