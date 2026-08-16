@@ -19,6 +19,8 @@ interface AuthContextValue {
 
 const SESSION_KEY = 'alexshop-user'
 
+export const GUEST_EMAIL = 'invitado@alexshop.com'
+
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -41,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const loginAsGuest = () => {
-    const guestUser: User = { email: 'invitado@alexshop.com', name: 'Invitado' }
+    const guestUser: User = { email: GUEST_EMAIL, name: 'Invitado' }
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(guestUser))
     setUser(guestUser)
   }

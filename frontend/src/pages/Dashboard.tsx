@@ -1,8 +1,9 @@
-import { useState } from 'react'
-import { useAuth } from '../auth/AuthContext'
+import { useEffect, useState } from 'react'
+import { GUEST_EMAIL, useAuth } from '../auth/AuthContext'
 import {
   packages,
   passes,
+  featuredPass,
   type ShopPackage,
 } from '../data/mockData'
 import './Dashboard.css'
@@ -13,10 +14,12 @@ type Period = 'Dia' | 'Semana' | 'Mes' | 'Anio'
 const periods: Period[] = ['Dia', 'Semana', 'Mes', 'Anio']
 
 const currencyConfig: Record<string, { flag: string; rate: number; symbol: string }> = {
-  MXN: { flag: 'fi fi-mx', rate: 18.5, symbol: 'MX$' },
-  GTQ: { flag: 'fi fi-gt', rate: 7.7, symbol: 'Q' },
-  USD: { flag: 'fi fi-us', rate: 1, symbol: '$' },
+  MXN: { flag: 'fi fi-mx', rate: 1, symbol: 'MX$' },
+  GTQ: { flag: 'fi fi-gt', rate: 7.7 / 18.5, symbol: 'Q' },
+  USD: { flag: 'fi fi-us', rate: 1 / 18.5, symbol: '$' },
 }
+
+const PENDING_KEY = 'alexshop-pending'
 
 const currencies = Object.entries(currencyConfig).map(([code, c]) => ({
   code,
@@ -25,6 +28,7 @@ const currencies = Object.entries(currencyConfig).map(([code, c]) => ({
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
+  const isGuest = user?.email === GUEST_EMAIL
   const [page, setPage] = useState<Page>('inicio')
   const [menuOpen, setMenuOpen] = useState(false)
   const [selected, setSelected] = useState<ShopPackage | null>(null)
@@ -33,6 +37,22 @@ export default function Dashboard() {
   const [toast, setToast] = useState<string | null>(null)
   const [currency, setCurrency] = useState('MXN')
   const [currencyOpen, setCurrencyOpen] = useState(false)
+  const [authModal, setAuthModal] = useState(false)
+
+  useEffect(() => {
+    const pendingId = sessionStorage.getItem(PENDING_KEY)
+    if (pendingId && !isGuest) {
+      sessionStorage.removeItem(PENDING_KEY)
+      const pkg = [...packages, ...passes].find((p) => p.id === pendingId)
+      if (pkg) {
+        setSelected(pkg)
+        setPage('diamantes')
+        setToast(`Bienvenido! Tu compra de ${pkg.diamonds} ◆ esta lista`)
+        window.setTimeout(() => setToast(null), 2600)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const money = (n: number) => {
     const { rate, symbol } = currencyConfig[currency]
@@ -55,7 +75,24 @@ export default function Dashboard() {
     }
   }
 
+  const requireAccount = (pkg: ShopPackage) => {
+    sessionStorage.setItem(PENDING_KEY, pkg.id)
+    setAuthModal(true)
+  }
+
+  const buyPackage = (pkg: ShopPackage) => {
+    if (isGuest) {
+      requireAccount(pkg)
+      return
+    }
+    selectPackage(pkg)
+  }
+
   const confirmPurchase = () => {
+    if (isGuest) {
+      requireAccount(selected ?? packages[0])
+      return
+    }
     if (!playerId.trim()) {
       showToast('Introduce tu ID de jugador')
       return
@@ -71,8 +108,6 @@ export default function Dashboard() {
 
   const navItems: { id: Page; label: string }[] = [
     { id: 'inicio', label: 'Inicio' },
-    { id: 'diamantes', label: 'Diamantes' },
-    { id: 'pases', label: 'Pases Elite' },
     { id: 'ranking', label: 'Ranking' },
   ]
 
@@ -202,7 +237,7 @@ export default function Dashboard() {
                     <article
                       key={pkg.id}
                       className={`package ${pkg.popular ? 'popular' : ''}`}
-                      onClick={() => selectPackage(pkg)}
+                      onClick={() => buyPackage(pkg)}
                     >
                       {pkg.popular && <div className="badge">POPULAR</div>}
                       <img
@@ -246,6 +281,25 @@ export default function Dashboard() {
                 </div>
               </aside>
             </div>
+
+            <section className="section-card pass-banner">
+              <img
+                className="pass-img"
+                src="/images/paseElite.png"
+                alt="Pase Elite"
+              />
+              <div className="pass-info">
+                <div className="eyebrow">OFERTA ESPECIAL</div>
+                <h2>Pase Elite</h2>
+                <p>
+                  Pase de temporada con entrega inmediata y beneficios exclusivos.
+                </p>
+                <strong className="pass-price">{money(featuredPass.price)}</strong>
+              </div>
+              <button className="buy" onClick={() => buyPackage(featuredPass)}>
+                Comprar
+              </button>
+            </section>
 
             <section className="fame">
               <div className="fame-head">
@@ -293,7 +347,7 @@ export default function Dashboard() {
                         {pkg.diamonds - pkg.bonus} + {pkg.bonus} bonus
                       </p>
                       <strong className="product-price">{money(pkg.price)}</strong>
-                      <button className="buy" onClick={() => selectPackage(pkg)}>
+                      <button className="buy" onClick={() => buyPackage(pkg)}>
                         Comprar
                       </button>
                     </div>
@@ -353,7 +407,7 @@ export default function Dashboard() {
                     <h3>{pkg.diamonds} ◆</h3>
                     <p>Pase Elite · entrega inmediata</p>
                     <strong className="product-price">{money(pkg.price)}</strong>
-                    <button className="buy" onClick={() => selectPackage(pkg)}>
+                    <button className="buy" onClick={() => buyPackage(pkg)}>
                       Comprar
                     </button>
                   </div>
@@ -405,6 +459,37 @@ export default function Dashboard() {
       </footer>
 
       {toast && <div className="toast show">{toast}</div>}
+
+      {authModal && (
+        <div className="auth-modal">
+          <div className="auth-modal-card">
+            <button
+              className="auth-modal-close"
+              onClick={() => setAuthModal(false)}
+            >
+              ×
+            </button>
+            <span className="auth-modal-icon">◆</span>
+            <h3>Necesitas una cuenta para comprar</h3>
+            <p>
+              Inicia sesion o registrate para completar tu compra de diamantes.
+              Guardaremos el paquete que elegiste.
+            </p>
+            <button className="buy wide" onClick={logout}>
+              Iniciar sesion
+            </button>
+            <button className="buy wide ghost" onClick={logout}>
+              Registrarse
+            </button>
+            <button
+              className="auth-modal-link"
+              onClick={() => setAuthModal(false)}
+            >
+              Seguir viendo
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
