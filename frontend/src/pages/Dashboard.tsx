@@ -122,6 +122,8 @@ export default function Dashboard() {
           clearProps: 'all',
         }, '-=0.4')
         .add(() => {
+          const isMobile = window.matchMedia('(max-width: 800px)').matches
+
           const steps = gsap.utils.toArray<HTMLElement>('.page.active .step')
           steps.forEach((el, i) => {
             tl.from(el, {
@@ -131,6 +133,8 @@ export default function Dashboard() {
               clearProps: 'all',
             }, '<')
           })
+
+          if (isMobile) return
 
           const letters = gsap.utils.toArray<HTMLElement>('.page.active .hl')
           const wave = gsap.timeline({ repeat: -1, repeatDelay: 3.5, delay: 0.4 })
@@ -600,7 +604,7 @@ export default function Dashboard() {
       </main>
 
       <footer className="footer">
-        <span>© 2026 AlexShop · DEMO UI</span>
+        <span>© 2026 AlexShop </span>
         <span>PRIVACIDAD · TERMINOS · SOPORTE</span>
       </footer>
 
