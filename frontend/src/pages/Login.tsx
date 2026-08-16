@@ -168,23 +168,31 @@ export default function Login() {
   }, [])
 
   useEffect(() => {
-    if (!window.google?.accounts?.id || !googleBtnRef.current) return
+    let cancelled = false
+    const poll = setInterval(() => {
+      if (cancelled) return
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return
+      clearInterval(poll)
 
-    window.google.accounts.id.initialize({
-      client_id: '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com',
-      callback: (response) => {
-        handleGoogle(response.credential)
-      },
-    })
+      window.google.accounts.id.initialize({
+        client_id: '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com',
+        callback: (response) => {
+          handleGoogle(response.credential)
+        },
+      })
 
-    window.google.accounts.id.renderButton(googleBtnRef.current, {
-      theme: 'outline',
-      size: 'large',
-      width: '100%',
-      text: 'continue_with',
-      shape: 'pill',
-      logo_alignment: 'left',
-    })
+      googleBtnRef.current.innerHTML = ''
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        text: 'continue_with',
+        shape: 'pill',
+        logo_alignment: 'left',
+      })
+    }, 200)
+
+    return () => { cancelled = true; clearInterval(poll) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
