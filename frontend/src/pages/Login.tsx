@@ -185,7 +185,7 @@ export default function Login() {
       window.google.accounts.id.renderButton(googleBtnRef.current, {
         theme: 'outline',
         size: 'large',
-        width: '100%',
+        width: 360,
         text: 'continue_with',
         shape: 'pill',
         logo_alignment: 'left',
