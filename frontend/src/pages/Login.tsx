@@ -348,13 +348,6 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="login-register">
-          ¿No tienes cuenta? <a href="#" onClick={(e) => e.preventDefault()}>Registrate aqui</a>
-        </p>
-        <p className="login-forgot">
-          <a href="#" onClick={(e) => e.preventDefault()}>¿Olvidaste tu contrasena?</a>
-        </p>
-
         <hr className="login-separator" />
 
         <button type="button" className="login-guest" onClick={() => {}}>
