@@ -13,9 +13,9 @@ type Period = 'Dia' | 'Semana' | 'Mes' | 'Anio'
 const periods: Period[] = ['Dia', 'Semana', 'Mes', 'Anio']
 
 const currencies = [
-  { code: 'MXN', flag: '🇲🇽' },
-  { code: 'GTQ', flag: '🇬🇹' },
-  { code: 'USD', flag: '🇺🇸' },
+  { code: 'MXN', flag: 'fi fi-mx' },
+  { code: 'GTQ', flag: 'fi fi-gt' },
+  { code: 'USD', flag: 'fi fi-us' },
 ]
 
 function money(n: number) {
@@ -94,7 +94,8 @@ export default function Dashboard() {
               className="currency"
               onClick={() => setCurrencyOpen(!currencyOpen)}
             >
-              {currencies.find((c) => c.code === currency)?.flag} {currency} ⌄
+              <span className={currencies.find((c) => c.code === currency)?.flag} />
+              {currency} ⌄
             </button>
             {currencyOpen && (
               <div className="currency-menu">
@@ -107,7 +108,8 @@ export default function Dashboard() {
                       setCurrencyOpen(false)
                     }}
                   >
-                    {c.flag} {c.code}
+                    <span className={c.flag} />
+                    {c.code}
                   </button>
                 ))}
               </div>
