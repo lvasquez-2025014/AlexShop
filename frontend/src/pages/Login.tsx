@@ -304,7 +304,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="admin@alexshop.com"
+                placeholder=""
                 autoComplete="email"
                 required
               />
