@@ -104,6 +104,9 @@ function FeatureIcon({ icon }: { icon: Feature['icon'] }) {
 }
 
 const brandLetters = 'AlexShop'.split('')
+const GOOGLE_CLIENT_ID =
+  '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com'
+let googleInitialized = false
 
 const iconClassMap: Record<Feature['icon'], string> = {
   diamond: 'icon-diamond',
@@ -174,12 +177,15 @@ export default function Login() {
       if (!window.google?.accounts?.id || !googleBtnRef.current) return
       clearInterval(poll)
 
-      window.google.accounts.id.initialize({
-        client_id: '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com',
-        callback: (response) => {
-          handleGoogle(response.credential)
-        },
-      })
+      if (!googleInitialized) {
+        googleInitialized = true
+        window.google.accounts.id.initialize({
+          client_id: '613074658722-fc60ijusjt5ntk39c9ai2gn98lt6t61q.apps.googleusercontent.com',
+          callback: (response) => {
+            handleGoogle(response.credential)
+          },
+        })
+      }
 
       googleBtnRef.current.innerHTML = ''
       window.google.accounts.id.renderButton(googleBtnRef.current, {
