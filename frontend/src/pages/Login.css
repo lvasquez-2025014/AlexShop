@@ -462,46 +462,64 @@
 @media (max-width: 900px) {
   .login {
     grid-template-columns: 1fr;
-    padding: 2rem 1.5rem;
-    gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 1.25rem;
+    gap: 1.5rem;
     overflow-y: auto;
   }
 
   .login-left {
-    padding: 1rem;
-    align-items: center;
-    text-align: center;
-    order: 1;
-  }
-
-  .login-right {
-    padding: 0 1rem;
-    order: 2;
+    display: contents;
   }
 
   .login-brand {
+    order: 0;
+    align-self: center;
     font-size: 2.2rem;
   }
 
+  .login-right {
+    order: 1;
+    padding: 1.75rem 1.25rem;
+  }
+
+  .login-right h2 {
+    text-align: center;
+    font-size: 1.8rem;
+  }
+
+  .login-right-sub {
+    text-align: center;
+  }
+
   .login-tagline {
+    order: 2;
     font-size: 1.1rem;
+    text-align: center;
+  }
+
+  .login-sub {
+    order: 3;
+    text-align: center;
+  }
+
+  .login-features {
+    order: 4;
+    align-self: center;
+    width: 100%;
+    max-width: 420px;
   }
 
   .feature-card {
     max-width: 100%;
   }
-
-  .login-features {
-    align-items: stretch;
-    width: 100%;
-    max-width: 420px;
-  }
 }
 
 @media (max-width: 480px) {
   .login {
-    padding: 1.5rem 1rem;
-    gap: 1.5rem;
+    padding: 1.25rem 1rem;
+    gap: 1.25rem;
   }
 
   .login-brand {
@@ -509,11 +527,21 @@
   }
 
   .login-right {
-    padding: 0;
+    padding: 1.5rem 1rem;
+    border-radius: 14px;
   }
 
   .login-right h2 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
+  }
+
+  .login-field input {
+    padding: 0.85rem 2.75rem 0.85rem 2.75rem;
+  }
+
+  .login-btn,
+  .login-google {
+    padding: 0.8rem;
   }
 
   .feature-card {
