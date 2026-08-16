@@ -820,6 +820,21 @@ button {
     padding: 16px;
   }
 
+  .maxeo-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .maxeo-img {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .maxeo-head h2 {
+    font-size: 18px;
+  }
+
   .maxeo-grid {
     grid-template-columns: 1fr;
   }

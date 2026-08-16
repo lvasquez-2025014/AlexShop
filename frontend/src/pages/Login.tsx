@@ -18,7 +18,7 @@ type Slide = {
 const slides: Slide[] = [
   {
     tagline: 'Tu mejor opcion',
-    sub: 'Lideres en venta de diamantes y pases',
+    sub: 'Lideres en venta de diamantes',
     features: [
       { icon: 'diamond', title: 'Precios -40%', subtitle: 'Valor Original' },
       { icon: 'bolt', title: 'Pases Elite', subtitle: 'Al mejor precio' },
