@@ -107,7 +107,6 @@ function FeatureIcon({ icon }: { icon: Feature['icon'] }) {
 
 const brandLetters = 'AlexShop'.split('')
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined) ?? ''
-let googleInitialized = false
 
 const iconClassMap: Record<Feature['icon'], string> = {
   diamond: 'icon-diamond',
@@ -176,46 +175,51 @@ export default function Login() {
       console.warn('VITE_GOOGLE_CLIENT_ID no configurado; Google Sign-In deshabilitado')
       return
     }
+
+    // Limpiar el contenedor antes de inicializar (evita botón duplicado o roto).
+    if (googleBtnRef.current) {
+      googleBtnRef.current.innerHTML = ''
+    }
+
     let cancelled = false
     const poll = setInterval(() => {
       if (cancelled) return
       if (!window.google?.accounts?.id || !googleBtnRef.current) return
       clearInterval(poll)
 
-      if (!googleInitialized) {
-        googleInitialized = true
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (response) => {
-            handleGoogle(response.credential)
-          },
-          // Deshabilita el auto-select para que el popup se abra
-          // solo cuando el usuario hace click, no automáticamente al cargar.
-          auto_select: false,
-          cancel_on_tap_outside: true,
-          // Habilita el flujo de popup nativo (más confiable que el click programático).
-          itp_support: true,
-          use_fedcm_for_prompt: true,
-        })
+      // Inicializar GIS (puede llamarse múltiples veces, Google lo maneja internamente).
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (response) => {
+          handleGoogle(response.credential)
+        },
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        itp_support: true,
+        use_fedcm_for_prompt: true,
+      })
 
-        // Render Google's official button off-screen so we can trigger it
-        // programmatically from our custom button. Position it far outside
-        // the viewport so the cursor never hovers over it (avoiding the
-        // pointer cursor leak).
-        googleBtnRef.current.innerHTML = ''
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text: 'continue_with',
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width: 300,
-        })
-      }
+      // Renderizar el botón off-screen (siempre fresco en cada montaje del componente).
+      googleBtnRef.current.innerHTML = ''
+      window.google.accounts.id.renderButton(googleBtnRef.current, {
+        type: 'standard',
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: 300,
+      })
     }, 200)
 
-    return () => { cancelled = true; clearInterval(poll) }
+    // Cleanup: limpiar botón y polling al desmontar.
+    return () => {
+      cancelled = true
+      clearInterval(poll)
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = ''
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
