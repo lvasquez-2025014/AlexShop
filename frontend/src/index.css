@@ -5,6 +5,32 @@
   cursor: none;
 }
 
+/* Force hidden cursor on every interactive element, including those the
+   browser tries to override (iframes, links, buttons, inputs, disabled). */
+*,
+*::before,
+*::after,
+html,
+body,
+a,
+button,
+input,
+textarea,
+select,
+label,
+[role="button"],
+[role="link"],
+[onclick],
+iframe {
+  cursor: none !important;
+}
+
+/* Iframes (Google button, etc.) live in their own document context where
+   our CSS doesn't reach. Wrap them so the host element stays invisible. */
+iframe {
+  color-scheme: light;
+}
+
 :root {
   color-scheme: dark;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;

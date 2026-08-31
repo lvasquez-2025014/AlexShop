@@ -1,13 +1,31 @@
 import { Router } from "express";
 import { OAuth2Client } from "google-auth-library";
-import { eq } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
+import { User } from "../db/user.model.js";
 import { signToken } from "./token.js";
 import { requireAuth, type AuthedRequest } from "./middleware.js";
 
 const router = Router();
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function toClient(user: {
+  _id: { toString(): string };
+  email: string;
+  name: string;
+  picture?: string;
+  role: string;
+  ffName?: string;
+  ffId?: string;
+}) {
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    name: user.name,
+    picture: user.picture ?? "",
+    role: user.role,
+    ffName: user.ffName ?? "",
+    ffId: user.ffId ?? "",
+  };
+}
 
 router.post("/google", async (req, res) => {
   const { credential } = req.body as { credential?: string };
@@ -33,32 +51,23 @@ router.post("/google", async (req, res) => {
     const name = payload.name ?? "";
     const picture = payload.picture ?? "";
 
-    const existing = await db
-      .select()
-      .from(users)
-      .where(eq(users.googleId, googleId))
-      .limit(1);
-
-    let user;
-    if (existing.length > 0) {
-      user = existing[0]!;
-      await db
-        .update(users)
-        .set({ name, picture })
-        .where(eq(users.id, user.id));
+    let user = await User.findOne({ googleId });
+    if (user) {
       user.name = name;
       user.picture = picture;
+      await user.save();
     } else {
-      const id = `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const inserted = await db
-        .insert(users)
-        .values({ id, googleId, email, name, picture, role: "client" })
-        .returning();
-      user = inserted[0]!;
+      user = await User.create({
+        googleId,
+        email,
+        name,
+        picture,
+        role: "client",
+      });
     }
 
     const tokenPayload = {
-      sub: user.id,
+      sub: user._id.toString(),
       email: user.email,
       name: user.name,
       picture: user.picture ?? "",
@@ -67,15 +76,7 @@ router.post("/google", async (req, res) => {
 
     res.json({
       token: signToken(tokenPayload),
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        picture: user.picture ?? "",
-        role: user.role,
-        ffName: user.ffName ?? "",
-        ffId: user.ffId ?? "",
-      },
+      user: toClient(user),
     });
   } catch (err) {
     console.error("Google auth error:", err);
@@ -108,30 +109,22 @@ router.post("/login", async (req, res) => {
     return;
   }
 
-  const existing = await db
-    .select()
-    .from(users)
-    .where(eq(users.email, adminEmail.toLowerCase()))
-    .limit(1);
+  const lowerEmail = adminEmail.toLowerCase();
+  let user = await User.findOne({ email: lowerEmail });
 
-  let user;
-  if (existing.length > 0) {
-    user = existing[0]!;
-    if (user.role !== "admin") {
-      await db.update(users).set({ role: "admin" }).where(eq(users.id, user.id));
-      user.role = "admin";
-    }
-  } else {
-    const id = `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const inserted = await db
-      .insert(users)
-      .values({ id, email: adminEmail.toLowerCase(), name: "Administrador", role: "admin" })
-      .returning();
-    user = inserted[0]!;
+  if (!user) {
+    user = await User.create({
+      email: lowerEmail,
+      name: "Administrador",
+      role: "admin",
+    });
+  } else if (user.role !== "admin") {
+    user.role = "admin";
+    await user.save();
   }
 
   const tokenPayload = {
-    sub: user.id,
+    sub: user._id.toString(),
     email: user.email,
     name: user.name,
     picture: user.picture ?? "",
@@ -140,43 +133,20 @@ router.post("/login", async (req, res) => {
 
   res.json({
     token: signToken(tokenPayload),
-    user: {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      picture: user.picture ?? "",
-      role: user.role,
-      ffName: user.ffName ?? "",
-      ffId: user.ffId ?? "",
-    },
+    user: toClient(user),
   });
 });
 
 router.get("/me", requireAuth, async (req, res) => {
   const authed = (req as AuthedRequest).user;
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, authed!.sub))
-    .limit(1);
+  const user = await User.findById(authed!.sub);
 
-  if (result.length === 0) {
+  if (!user) {
     res.json({ user: authed });
     return;
   }
 
-  const u = result[0]!;
-  res.json({
-    user: {
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      picture: u.picture ?? "",
-      role: u.role,
-      ffName: u.ffName ?? "",
-      ffId: u.ffId ?? "",
-    },
-  });
+  res.json({ user: toClient(user) });
 });
 
 export default router;

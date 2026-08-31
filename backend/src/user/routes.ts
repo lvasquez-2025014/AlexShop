@@ -1,7 +1,5 @@
 import { Router } from "express";
-import { eq } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
+import { User } from "../db/user.model.js";
 import { requireAuth, type AuthedRequest } from "../auth/middleware.js";
 
 const router = Router();
@@ -19,24 +17,26 @@ router.patch("/profile", requireAuth, async (req, res) => {
     return;
   }
 
-  await db.update(users).set(updates).where(eq(users.id, authed!.sub));
+  const user = await User.findByIdAndUpdate(
+    authed!.sub,
+    { $set: updates },
+    { new: true }
+  );
 
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.id, authed!.sub))
-    .limit(1);
+  if (!user) {
+    res.status(404).json({ error: "Usuario no encontrado" });
+    return;
+  }
 
-  const u = result[0]!;
   res.json({
     user: {
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      picture: u.picture ?? "",
-      role: u.role,
-      ffName: u.ffName ?? "",
-      ffId: u.ffId ?? "",
+      id: user._id.toString(),
+      email: user.email,
+      name: user.name,
+      picture: user.picture ?? "",
+      role: user.role,
+      ffName: user.ffName ?? "",
+      ffId: user.ffId ?? "",
     },
   });
 });

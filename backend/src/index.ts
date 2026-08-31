@@ -5,6 +5,7 @@ import cors from "cors";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./auth/routes.js";
 import userRoutes from "./user/routes.js";
+import { connectDB, mongoose } from "./db/index.js";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -44,7 +45,12 @@ const authLimiter = rateLimit({
 });
 
 app.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "webstore-backend" });
+  const dbState = mongoose.connection.readyState; // 1 = connected
+  res.json({
+    status: dbState === 1 ? "ok" : "degraded",
+    service: "webstore-backend",
+    db: dbState === 1 ? "connected" : "disconnected",
+  });
 });
 
 app.use("/api/auth", authLimiter, authRoutes);
@@ -62,6 +68,16 @@ app.use(
   }
 );
 
-app.listen(PORT, () => {
-  console.log(`Backend listening on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`Backend listening on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error("No se pudo iniciar el servidor:", err);
+    process.exit(1);
+  }
+}
+
+start();

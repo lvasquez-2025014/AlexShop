@@ -220,18 +220,53 @@
   flex-shrink: 0;
 }
 
-/* Google button container (GIS renders inside) */
-.google-btn-container {
+/* Custom Google button (uses Google's official GIS under the hood) */
+.google-custom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
   width: 100%;
+  padding: 0.9rem 1rem;
   margin-top: 1.5rem;
+  border: 1px solid rgba(96, 165, 250, 0.28);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #f1f5f9;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.15s ease,
+    box-shadow 0.2s ease;
 }
 
-.google-btn-container > div {
-  width: 100% !important;
+.google-custom-btn:hover:not(:disabled) {
+  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(20, 32, 60, 0.85);
+  box-shadow: 0 0 0 1px rgba(0, 212, 255, 0.15),
+              0 6px 24px rgba(0, 212, 255, 0.18);
+  transform: translateY(-1px);
 }
 
-.google-btn-container iframe {
-  width: 100% !important;
+.google-custom-btn:active:not(:disabled) {
+  transform: translateY(0);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.google-custom-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.google-custom-btn .google-logo {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
 }
 
 .login-loading {
