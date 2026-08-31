@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(() =>
     sessionStorage.getItem(ACCESS_TOKEN_KEY)
   )
-  const [refreshToken, setRefreshToken] = useState<string | null>(() =>
+  const [, setRefreshToken] = useState<string | null>(() =>
     sessionStorage.getItem(REFRESH_TOKEN_KEY)
   )
   const [loading, setLoading] = useState(false)

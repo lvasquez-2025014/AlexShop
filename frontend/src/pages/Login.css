@@ -278,21 +278,22 @@
   flex-shrink: 0;
 }
 
-/* Off-screen container for Google's native button. Positioned far below
-   the viewport (top: 9999px) so the cursor never hovers over it, but still
-   clickable programmatically. */
+/* Container for Google's native button. Positioned just below the viewport
+   (top: 9999px) so it stays out of sight, but still clickable programmatically.
+   This is the official Google recommended approach for custom-styled buttons. */
 .google-native-host {
   position: absolute;
-  left: 0;
-  top: 9999px;
-  width: 300px;
-  height: 50px;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
-.google-native-host > * {
-  pointer-events: auto;
+/* Force cursor: none inside the GSI iframe so our custom cursor shows through. */
+.google-native-host * {
+  cursor: none !important;
 }
 
 .login-loading {

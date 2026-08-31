@@ -189,6 +189,13 @@ export default function Login() {
           callback: (response) => {
             handleGoogle(response.credential)
           },
+          // Deshabilita el auto-select para que el popup se abra
+          // solo cuando el usuario hace click, no automáticamente al cargar.
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          // Habilita el flujo de popup nativo (más confiable que el click programático).
+          itp_support: true,
+          use_fedcm_for_prompt: true,
         })
 
         // Render Google's official button off-screen so we can trigger it
@@ -212,18 +219,93 @@ export default function Login() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const handleCustomGoogleClick = () => {
-    if (!GOOGLE_CLIENT_ID || !googleBtnRef.current) return
-    // Trigger the off-screen Google button programmatically
-    const inner = googleBtnRef.current.querySelector<HTMLElement>(
-      'div[role="button"], button, iframe, .nCP5dc'
-    )
-    if (inner) {
-      inner.click()
-    } else {
-      // Fallback: use the GIS prompt (may not work in all browsers/conditions)
-      window.google?.accounts?.id?.prompt()
+  /**
+   * Estrategia robusta para abrir el popup de Google con múltiples fallbacks:
+   * 1. Espera activa hasta que GIS esté listo (hasta 2s).
+   * 2. Si el botón off-screen está renderizado, intenta hacer click.
+   * 3. Si falla el click, usa `prompt()` (popup nativo de GIS).
+   * 4. Como último recurso, muestra un error claro al usuario.
+   */
+  const handleCustomGoogleClick = (e?: React.MouseEvent) => {
+    e?.preventDefault()
+    if (!GOOGLE_CLIENT_ID) {
+      console.error('Google Client ID no configurado')
+      return
     }
+
+    // Si GIS aún no está listo, esperar hasta 2s y reintentar.
+    if (!window.google?.accounts?.id) {
+      console.warn('Google Identity Services aún no está listo, esperando...')
+      let waited = 0
+      const waitInterval = setInterval(() => {
+        waited += 200
+        if (window.google?.accounts?.id || waited >= 2000) {
+          clearInterval(waitInterval)
+          if (window.google?.accounts?.id) {
+            // Reintentar después de que cargó GIS
+            triggerGoogleLogin()
+          } else {
+            console.error('Google Identity Services no cargó. Recarga la página.')
+          }
+        }
+      }, 200)
+      return
+    }
+
+    triggerGoogleLogin()
+  }
+
+  /**
+   * Ejecuta el flujo de login con Google. Se llama solo cuando GIS está listo.
+   */
+  const triggerGoogleLogin = () => {
+    // Estrategia 1: Click en el botón off-screen.
+    const host = googleBtnRef.current
+    if (host) {
+      // Re-renderizar el botón si aún no existe (caso: usuario clickeó muy rápido).
+      if (host.children.length === 0 && window.google?.accounts?.id?.renderButton) {
+        try {
+          window.google.accounts.id.renderButton(host, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: 'continue_with',
+            shape: 'rectangular',
+            logo_alignment: 'left',
+            width: 300,
+          })
+        } catch (e) {
+          console.warn('Re-render del botón falló:', e)
+        }
+      }
+
+      // Buscar el botón interno (múltiples selectores para compatibilidad).
+      const inner = host.querySelector<HTMLElement>(
+        'div[role="button"], iframe, .nCP5dc, [id^="gsi_"], button'
+      )
+      if (inner) {
+        try {
+          inner.click()
+          return
+        } catch (err) {
+          console.warn('Click al botón off-screen falló, usando prompt()', err)
+        }
+      }
+    }
+
+    // Estrategia 2: Popup nativo de Google (prompt).
+    if (window.google?.accounts?.id?.prompt) {
+      try {
+        window.google.accounts.id.prompt()
+        return
+      } catch (err) {
+        console.error('Google prompt() falló:', err)
+      }
+    }
+
+    // Estrategia 3: Como último recurso, abrir el selector de Google en nueva ventana.
+    console.error('No se pudo abrir el popup de Google. Recarga la página.')
+    setError('No se pudo abrir el inicio de sesión con Google. Por favor recarga la página.')
   }
 
   useEffect(() => {
