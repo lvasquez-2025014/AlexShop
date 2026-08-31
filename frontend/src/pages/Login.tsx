@@ -476,11 +476,22 @@ export default function Login() {
           <span>ACCESO RAPIDO</span>
         </div>
 
+        {/* 
+          Contenedor del botón oficial de Google.
+          - Google renderiza su botón aquí dentro.
+          - Usamos CSS para estilizarlo con nuestro tema dark.
+          - Es la solución MÁS CONFIABLE porque Google maneja todo el flujo internamente.
+          - Funciona en cualquier momento: carga inicial, después de logout, después de errores.
+        */}
+        <div ref={googleBtnRef} className="google-native-container" />
+
+        {/* Botón fallback custom (oculto) - solo se usa si GIS falla completamente */}
         <button
           type="button"
           className="google-custom-btn"
           onClick={handleCustomGoogleClick}
           disabled={!GOOGLE_CLIENT_ID}
+          style={{ display: 'none' }}
         >
           <svg className="google-logo" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
@@ -490,11 +501,6 @@ export default function Login() {
           </svg>
           <span>Continuar con Google</span>
         </button>
-
-        {/* Off-screen Google button: Google renders its official button here.
-            Positioned far outside the viewport so our custom cursor never
-            hovers over it (avoiding pointer cursor leak). */}
-        <div ref={googleBtnRef} className="google-native-host" aria-hidden="true" />
 
         <hr className="login-separator" />
 

@@ -278,21 +278,33 @@
   flex-shrink: 0;
 }
 
-/* Container for Google's native button. Positioned just below the viewport
-   (top: 9999px) so it stays out of sight, but still clickable programmatically.
-   This is the official Google recommended approach for custom-styled buttons. */
-.google-native-host {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  pointer-events: auto;
+/* 
+ * Contenedor VISIBLE del botón nativo de Google.
+ * Esta es la solución MÁS CONFIABLE porque Google maneja todo el flujo internamente.
+ * Funciona en cualquier momento: carga inicial, después de logout, después de errores.
+ */
+.google-native-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 50px;
+  margin: 0.5rem 0;
+  position: relative;
 }
 
-/* Force cursor: none inside the GSI iframe so our custom cursor shows through. */
-.google-native-host * {
+/* Forzar que el iframe de Google tenga el cursor correcto */
+.google-native-container iframe {
+  cursor: none !important;
+}
+
+/* Forzar visibilidad del botón si Google lo oculta por algún motivo */
+.google-native-container > div,
+.google-native-container > div > div,
+.google-native-container [role="button"] {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   cursor: none !important;
 }
 
