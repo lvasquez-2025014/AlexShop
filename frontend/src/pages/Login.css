@@ -163,6 +163,15 @@
   color: #f1f5f9;
 }
 
+/* Logo displayed above the form title */
+.login-logo {
+  display: block;
+  width: 72px;
+  height: auto;
+  margin-bottom: 0.75rem;
+  filter: drop-shadow(0 0 18px rgba(0, 212, 255, 0.35));
+}
+
 .login-right-sub {
   font-size: 0.95rem;
   color: var(--text-dim);
@@ -267,6 +276,23 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+/* Off-screen container for Google's native button. Positioned far below
+   the viewport (top: 9999px) so the cursor never hovers over it, but still
+   clickable programmatically. */
+.google-native-host {
+  position: absolute;
+  left: 0;
+  top: 9999px;
+  width: 300px;
+  height: 50px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.google-native-host > * {
+  pointer-events: auto;
 }
 
 .login-loading {

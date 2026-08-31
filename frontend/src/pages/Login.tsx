@@ -130,6 +130,7 @@ export default function Login() {
   const taglineRef = useRef<HTMLParagraphElement>(null)
   const subRef = useRef<HTMLParagraphElement>(null)
   const featuresRef = useRef<HTMLDivElement>(null)
+  const googleBtnRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -178,7 +179,7 @@ export default function Login() {
     let cancelled = false
     const poll = setInterval(() => {
       if (cancelled) return
-      if (!window.google?.accounts?.id) return
+      if (!window.google?.accounts?.id || !googleBtnRef.current) return
       clearInterval(poll)
 
       if (!googleInitialized) {
@@ -188,8 +189,21 @@ export default function Login() {
           callback: (response) => {
             handleGoogle(response.credential)
           },
-          // Disable One Tap auto-popup; we trigger it manually on click.
-          prompt_parent_id: undefined,
+        })
+
+        // Render Google's official button off-screen so we can trigger it
+        // programmatically from our custom button. Position it far outside
+        // the viewport so the cursor never hovers over it (avoiding the
+        // pointer cursor leak).
+        googleBtnRef.current.innerHTML = ''
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'continue_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+          width: 300,
         })
       }
     }, 200)
@@ -199,11 +213,17 @@ export default function Login() {
   }, [])
 
   const handleCustomGoogleClick = () => {
-    if (!GOOGLE_CLIENT_ID) return
-    // Opens Google's official account chooser popup directly, with no
-    // iframe or native button on our page (so our custom cursor never sees
-    // a pointer cursor leak).
-    window.google?.accounts?.id?.prompt()
+    if (!GOOGLE_CLIENT_ID || !googleBtnRef.current) return
+    // Trigger the off-screen Google button programmatically
+    const inner = googleBtnRef.current.querySelector<HTMLElement>(
+      'div[role="button"], button, iframe, .nCP5dc'
+    )
+    if (inner) {
+      inner.click()
+    } else {
+      // Fallback: use the GIS prompt (may not work in all browsers/conditions)
+      window.google?.accounts?.id?.prompt()
+    }
   }
 
   useEffect(() => {
@@ -294,6 +314,11 @@ export default function Login() {
       </section>
 
       <section className="login-right">
+        <img
+          src="/images/logo.png"
+          alt="AlexShop logo"
+          className="login-logo"
+        />
         <h2>Iniciar Sesion</h2>
 
         <form className="login-form" onSubmit={handleSubmit} noValidate>
@@ -379,6 +404,11 @@ export default function Login() {
           </svg>
           <span>Continuar con Google</span>
         </button>
+
+        {/* Off-screen Google button: Google renders its official button here.
+            Positioned far outside the viewport so our custom cursor never
+            hovers over it (avoiding pointer cursor leak). */}
+        <div ref={googleBtnRef} className="google-native-host" aria-hidden="true" />
 
         <hr className="login-separator" />
 
