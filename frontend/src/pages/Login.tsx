@@ -11,8 +11,10 @@ declare global {
           initialize: (config: {
             client_id: string
             callback: (response: { credential: string }) => void
+            [key: string]: unknown
           }) => void
           renderButton: (element: HTMLElement, config: Record<string, unknown>) => void
+          prompt: () => void
         }
       }
     }
